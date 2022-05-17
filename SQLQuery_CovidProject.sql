@@ -19,11 +19,36 @@ where location = 'Algeria'
 order by 1, 2
 
 
+-- Creating Procedure for Looking at Total cases vs Total deaths for a specific Country
+
+drop procedure if exists Covid_Country
+
+create procedure Covid_Country
+@location nvarchar(255)
+as
+select location, date, total_cases, total_deaths, round((total_deaths / total_cases)*100, 2) as death_percentage
+from [Covid Project]..CovidDeaths
+where location = @location
+order by 1, 2
+
+exec Covid_Country @location = 'Belgium'
+
+
 -- Total cases vs Total deaths by Country
 
 alter table [Covid Project]..CovidDeaths alter column total_deaths bigint
 
 select location, max(total_cases) as Cases, max(total_deaths) as Deaths, max(total_deaths) / max(total_cases)*100 as DeathPercentage
+from [Covid Project]..CovidDeaths
+group by location
+order by 1
+
+
+-- DeathPercentage by Country compared with Worlwide DeathPercentage using Subqueries
+
+select location, max(total_cases) as Cases, max(total_deaths) as Deaths, max(total_deaths) / max(total_cases)*100 as DeathPercentage,
+(select max(total_deaths) / max(total_cases)*100 from [Covid Project]..CovidDeaths 
+where location = 'World') as WW_DeathPercentage
 from [Covid Project]..CovidDeaths
 group by location
 order by 1
